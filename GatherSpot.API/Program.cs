@@ -1,3 +1,4 @@
+using GatherSpot.API.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
@@ -6,13 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<DataContext>(options =>
-{
-	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+builder.Services.AddApplicationServices(builder.Configuration); 
+// this is an extension method, which is a method that extends the Services Collection here
+// used to seperate the process of adding services to a different file
 
 var app = builder.Build();
 
@@ -22,6 +19,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
+
+app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 
