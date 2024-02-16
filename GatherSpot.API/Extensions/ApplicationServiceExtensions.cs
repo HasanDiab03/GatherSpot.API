@@ -3,6 +3,8 @@ using Application.Core;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 using System.Reflection;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 namespace GatherSpot.API.Extensions
 {
@@ -27,6 +29,8 @@ namespace GatherSpot.API.Extensions
 
 			services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetAssembly(typeof(GetActivitiesQuery))));
 			services.AddAutoMapper(typeof(MappingProfiles).Assembly);
+			services.AddFluentValidationAutoValidation();
+			services.AddValidatorsFromAssemblyContaining<CreateActivityValidator>();
 			return services;
 		}
 	}
