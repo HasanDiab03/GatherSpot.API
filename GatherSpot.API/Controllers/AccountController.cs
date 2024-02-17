@@ -37,10 +37,17 @@ namespace GatherSpot.API.Controllers
 		public async Task<ActionResult<UserDto>> Register([FromBody] RegisterDto registerDto)
 		{
 			if (await _userManager.Users.AnyAsync(user => user.UserName == registerDto.Username))
-				return BadRequest("Username already taken");
+			{
+				ModelState.AddModelError("username", "username already taken");
+				return ValidationProblem(); // we add the validation error to the Model State,
+                                // and then return a validationProblem in order to get an errors object that has the errors
+			}
 
 			if (await _userManager.Users.AnyAsync(user => user.Email == registerDto.Email))
-				return BadRequest("Email already taken");
+			{
+				ModelState.AddModelError("email", "Email already taken");
+				return ValidationProblem();
+			}
 
 			var user = new AppUser()
 			{
