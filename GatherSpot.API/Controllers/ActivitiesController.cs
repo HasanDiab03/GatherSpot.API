@@ -1,5 +1,6 @@
 ﻿using Application.Activities;
 using Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GatherSpot.API.Controllers

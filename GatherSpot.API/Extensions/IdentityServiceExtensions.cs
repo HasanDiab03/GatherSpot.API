@@ -1,0 +1,39 @@
+﻿using System.Text;
+using Domain;
+using GatherSpot.API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Persistence;
+
+namespace GatherSpot.API.Extensions
+{
+	public static class IdentityServiceExtensions
+	{
+		public static IServiceCollection AddIdentityService(this IServiceCollection services, IConfiguration configuration)
+		{
+			services.AddIdentityCore<AppUser>(options =>
+			{
+				options.Password.RequireNonAlphanumeric = false; // we can add options to a couple of attributes here such as the password
+				options.User.RequireUniqueEmail = true;
+			})
+			.AddEntityFrameworkStores<DataContext>(); // this is used to allow to connect and query the identity tables in our db
+			var key = new SymmetricSecurityKey(
+				Encoding.UTF8.GetBytes(configuration["TokenKey"]));
+			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+				.AddJwtBearer(options =>
+				{
+					options.TokenValidationParameters = new TokenValidationParameters()
+					{
+						ValidateIssuerSigningKey = true,
+						IssuerSigningKey = key,
+						ValidateIssuer = false,
+						ValidateAudience = false
+					};
+				}); // this is to verify the jwt we receive,
+					// it will verify that the token is signed with the same key that we used to sign it before.
+			services.AddScoped<TokenService>();
+
+			return services;
+		}
+	}
+}

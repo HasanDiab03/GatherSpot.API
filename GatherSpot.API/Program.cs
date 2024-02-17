@@ -1,5 +1,9 @@
+using Domain;
 using GatherSpot.API.Extensions;
 using GatherSpot.API.Middleware;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
@@ -7,10 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+	var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+	options.Filters.Add(new AuthorizeFilter(policy)); // this is used to add authentication to every single controller endpoint
+});
 builder.Services.AddApplicationServices(builder.Configuration); 
 // this is an extension method, which is a method that extends the Services Collection here
 // used to seperate the process of adding services to a different file
+
+builder.Services.AddIdentityService(builder.Configuration); // extension method 
 
 var app = builder.Build();
 
@@ -26,6 +36,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("CorsPolicy");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 
@@ -41,8 +52,10 @@ try
 {
 	var context = services.GetRequiredService<DataContext>(); // basically what happens when the http request occurs,
                                                            // getting an instance of the DataContext Service from the DI Container
+                                                           
+	var userManager = services.GetRequiredService<UserManager<AppUser>>();
 	await context.Database.MigrateAsync(); // same as Update-Database (add migrations, and create db if not exist)
-	await Seed.SeedData(context);
+	await Seed.SeedData(context, userManager);
 }
 catch (Exception e)
 {
