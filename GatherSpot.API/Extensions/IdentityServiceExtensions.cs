@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using Domain;
 using GatherSpot.API.Services;
+using Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Persistence;
 
@@ -32,7 +34,14 @@ namespace GatherSpot.API.Extensions
 				}); // this is to verify the jwt we receive,
 					// it will verify that the token is signed with the same key that we used to sign it before.
 			services.AddScoped<TokenService>();
-
+			services.AddAuthorization(options =>
+			{
+				options.AddPolicy("IsActivityHost", policy =>
+				{
+					policy.Requirements.Add(new IsHostRequirement());
+				});
+			}); // this is to configure the authorization to add a new policy that we can use on our endpoints
+			services.AddTransient<IAuthorizationHandler, IsHostRequirementHandler>();
 			return services;
 		}
 	}

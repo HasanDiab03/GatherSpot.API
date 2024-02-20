@@ -5,11 +5,13 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GatherSpot.API", "GatherSpot.API\GatherSpot.API.csproj", "{BF6382EE-E544-45CC-B868-E57B17B74CC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{3497515F-5CFB-45C3-9A7C-EC876BEE519C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csproj", "{3497515F-5CFB-45C3-9A7C-EC876BEE519C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{3CEB100D-FE51-410A-9E6B-7BE356BA9FD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\Application.csproj", "{3CEB100D-FE51-410A-9E6B-7BE356BA9FD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence", "Persistence\Persistence.csproj", "{7727A1B7-788D-44E4-A8E4-B5214AB53A5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence", "Persistence\Persistence.csproj", "{7727A1B7-788D-44E4-A8E4-B5214AB53A5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{30B85987-8140-4876-AD1C-F82D9B1FDB08}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{7727A1B7-788D-44E4-A8E4-B5214AB53A5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7727A1B7-788D-44E4-A8E4-B5214AB53A5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7727A1B7-788D-44E4-A8E4-B5214AB53A5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30B85987-8140-4876-AD1C-F82D9B1FDB08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30B85987-8140-4876-AD1C-F82D9B1FDB08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30B85987-8140-4876-AD1C-F82D9B1FDB08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30B85987-8140-4876-AD1C-F82D9B1FDB08}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GatherSpot.API.Controllers
 {
-	[AllowAnonymous]
 	public class ActivitiesController : BaseApiController
 	{
 
@@ -32,6 +31,7 @@ namespace GatherSpot.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize(Policy = "IsActivityHost")] // this is an authorization policy, used so that only a user that is a host can update it
 		public async Task<IActionResult> UpdateActivity(Guid id, Activity activity)
 		{
 			activity.Id = id;
@@ -40,9 +40,17 @@ namespace GatherSpot.API.Controllers
 		}
 
 		[HttpDelete("{id}")]
+		[Authorize(Policy = "IsActivityHost")]
 		public async Task<IActionResult> DeleteActivity(Guid id)
 		{
 			var result = await Mediator.Send(new DeleteActivityCommand(id));
+			return HandleResult(result);
+		}
+
+		[HttpPost("{id}/attend")]
+		public async Task<IActionResult> Attend(Guid id)
+		{
+			var result = await Mediator.Send(new UpdateAttendanceCommand(id));
 			return HandleResult(result);
 		}
 	}
