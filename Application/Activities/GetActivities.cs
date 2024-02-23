@@ -25,7 +25,7 @@ namespace Application.Activities
 				var activities = await _context.Activities
 					.ProjectTo<ActivityDto>(_mapper.ConfigurationProvider)
 					.ToListAsync(cancellationToken);
-				//	ProjectTo is equilivent to Include(), it just does it in a cleaner way.
+				//	ProjectTo is equivelent to Include(), it just does it in a cleaner way.
 				return Result<List<ActivityDto>>.Success(activities);
 			}
 			// The Cancellation Token is used for cancelling the request whenever a client no longer wants to keep waiting until it finishes,

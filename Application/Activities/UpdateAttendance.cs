@@ -3,6 +3,7 @@ using Application.Repositories;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Persistence;
 
 namespace Application.Activities
@@ -12,11 +13,13 @@ namespace Application.Activities
 	{
 		private readonly IUserAccessor _userAccessor;
 		private readonly DataContext _context;
+		private readonly ILogger<UpdateActivityHandler> _logger;
 
-		public UpdateAttendanceHandler(IUserAccessor userAccessor, DataContext context)
+		public UpdateAttendanceHandler(IUserAccessor userAccessor, DataContext context, ILogger<UpdateActivityHandler> logger)
 		{
 			_userAccessor = userAccessor;
 			_context = context;
+			_logger = logger;
 		}
         public async Task<Result<Unit>> Handle(UpdateAttendanceCommand request, CancellationToken cancellationToken)
 		{
@@ -24,7 +27,8 @@ namespace Application.Activities
 				.Include(a => a.Attendees)
 				.ThenInclude(u => u.AppUser)
 				.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-
+			// this would not cause the circular loop error, since we are not serializing the data.
+			// it often occurs when we would return such thing as response, so when transforming to json, it would lead to error
 			if (activity is null)
 				return null;
 			var user = await _context.Users
@@ -38,7 +42,7 @@ namespace Application.Activities
 				activity.IsCancelled = !activity.IsCancelled;
 			} // user making request is host
 
-			if (attendance is not null && hostUsername == user.UserName)
+			if (attendance is not null && hostUsername != user.UserName)
 			{
 				activity.Attendees.Remove(attendance);
 			}

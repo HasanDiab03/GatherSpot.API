@@ -6,6 +6,7 @@ using System.Reflection;
 using Application.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Infrastructure.Photos;
 using Infrastructure.Security;
 
 namespace GatherSpot.API.Extensions
@@ -35,6 +36,7 @@ namespace GatherSpot.API.Extensions
 			services.AddValidatorsFromAssemblyContaining<CreateActivityValidator>();
 			services.AddHttpContextAccessor();
 			services.AddScoped<IUserAccessor, UserAccessor>();
+			services.AddScoped<IPhotoAccessor, PhotoAccessor>();
 			return services;
 		}
 	}

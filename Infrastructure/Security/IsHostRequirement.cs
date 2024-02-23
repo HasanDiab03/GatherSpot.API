@@ -9,7 +9,8 @@ namespace Infrastructure.Security
 	public class IsHostRequirement : IAuthorizationRequirement
 	{
 	}
-
+	// IAuthorizationRequirement is an interface that represents a requirement that must be met for authorization to succeed
+	// what we are doing here is adding more requirements to our authorization
 	public class IsHostRequirementHandler : AuthorizationHandler<IsHostRequirement>
 	{
 		private readonly DataContext _dbContext;

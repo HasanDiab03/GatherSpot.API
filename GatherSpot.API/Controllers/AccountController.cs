@@ -25,7 +25,9 @@ namespace GatherSpot.API.Controllers
 		[AllowAnonymous] // this is so that the AccountController endpoints don't require authentication
 		public async Task<ActionResult<UserDto>> Login([FromBody] LoginDto loginDto)
 		{
-			var user = await _userManager.FindByEmailAsync(loginDto.Email);
+			var user = await _userManager.Users
+				.Include(p => p.Photos)
+				.FirstOrDefaultAsync(x => x.Email == loginDto.Email);
 			if (user is null) return Unauthorized();
 			var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
 			if(!result) return Unauthorized();
@@ -66,7 +68,9 @@ namespace GatherSpot.API.Controllers
 		[Authorize]
 		public async Task<ActionResult<UserDto>> GetCurrentUser()
 		{
-			var user = await _userManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
+			var user = await _userManager.Users
+				.Include(x => x.Photos)
+				.FirstOrDefaultAsync(x => x.Email == User.FindFirstValue(ClaimTypes.Email));
 			// the User here is a Claims Principal associated to the action execution,
 			// since we are using JWT to authenticate, then the claims principal will be inside the token
 			return CreateUserDto(user);
@@ -75,7 +79,7 @@ namespace GatherSpot.API.Controllers
 			=> new()
 			{
 				DisplayName = user.DisplayName,
-				Image = null,
+				Image = user.Photos?.FirstOrDefault(x => x.IsMain)?.Url,
 				Token = _tokenService.CreateToken(user),
 				Username = user.UserName,
 			};
