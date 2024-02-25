@@ -8,5 +8,9 @@ namespace GatherSpot.API.Controllers
 		[HttpGet("{username}")]
 		public async Task<IActionResult> GetProfile(string username, CancellationToken cancellationToken)
 			=> HandleResult(await Mediator.Send(new GetUserProfileQuery(username), cancellationToken));
+
+		[HttpPut]
+		public async Task<IActionResult> UpdateProfile(UpdateProfileCommand command, CancellationToken cancellationToken)
+			=> HandleResult(await Mediator.Send(command, cancellationToken));
 	}
 }
