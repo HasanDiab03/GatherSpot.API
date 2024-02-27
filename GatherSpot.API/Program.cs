@@ -1,6 +1,7 @@
 using Domain;
 using GatherSpot.API.Extensions;
 using GatherSpot.API.Middleware;
+using GatherSpot.API.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -41,6 +42,7 @@ app.UseAuthorization();
 
 
 app.MapControllers();
+app.MapHub<ChatHub>("/chat");
 
 using var scope = app.Services.CreateScope(); // create a scope to access a service,
                                               // something like what happens when a http request comes for example,
@@ -60,7 +62,7 @@ try
 catch (Exception e)
 {
 	var logger = services.GetRequiredService<ILogger<Program>>();
-	logger.LogError(e, "An error occured during migration");
+	logger.LogError(e, "An error occurred during migration");
 }
 app.Run();
 

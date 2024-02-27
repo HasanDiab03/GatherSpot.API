@@ -31,6 +31,19 @@ namespace GatherSpot.API.Extensions
 						ValidateIssuer = false,
 						ValidateAudience = false
 					};
+					options.Events = new JwtBearerEvents()
+					{
+						OnMessageReceived = context =>
+						{
+							var accessToken = context.Request.Query["access_token"];
+							var path = context.HttpContext.Request.Path;
+							if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chat"))
+							{
+								context.Token = accessToken;
+							}
+							return Task.CompletedTask;
+						}
+					};
 				}); // this is to verify the jwt we receive,
 					// it will verify that the token is signed with the same key that we used to sign it before.
 			services.AddScoped<TokenService>();

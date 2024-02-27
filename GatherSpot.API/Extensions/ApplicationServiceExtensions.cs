@@ -37,6 +37,7 @@ namespace GatherSpot.API.Extensions
 			services.AddHttpContextAccessor();
 			services.AddScoped<IUserAccessor, UserAccessor>();
 			services.AddScoped<IPhotoAccessor, PhotoAccessor>();
+			services.AddSignalR();
 			return services;
 		}
 	}
