@@ -26,7 +26,11 @@ namespace GatherSpot.API.Extensions
 			{
 				options.AddPolicy("CorsPolicy", policy =>
 				{
-					policy.AllowAnyMethod().AllowAnyHeader().WithOrigins("http://localhost:5173");
+					policy
+						.AllowAnyMethod()
+						.AllowAnyHeader()
+						.AllowCredentials() // this is for signalR specificly, since it requires Access-Control-Allow-Credentials header to be sent
+						.WithOrigins("http://localhost:5173");
 				});
 			});
 

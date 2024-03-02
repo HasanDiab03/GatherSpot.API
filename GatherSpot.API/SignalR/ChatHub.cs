@@ -14,11 +14,11 @@ namespace GatherSpot.API.SignalR
 		}
 		// What we call a method is important, since the client will connect to the signalR hub,
 		// and invoke this method 
-		public async Task SendComment(CreateCommentCommand command, CancellationToken cancellationToken)
+		public async Task SendComment(CreateCommentCommand command)
 		{
-			var comment = await _mediator.Send(command, cancellationToken);
+			var comment = await _mediator.Send(command);
 			await Clients.Group(command.ActivityId.ToString())
-				.SendAsync("ReceiveComment", comment.Value, cancellationToken);
+				.SendAsync("ReceiveComment", comment.Value);
 		}
 
 		public override async Task OnConnectedAsync()
