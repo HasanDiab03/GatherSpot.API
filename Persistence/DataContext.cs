@@ -14,6 +14,7 @@ namespace Persistence
 		public DbSet<ActivityAttendee> ActivityAttendees{ get; set; }
 		public DbSet<Photo> Photos { get; set; }
 		public DbSet<Comment> Comments { get; set; }
+		public DbSet<UserFollowing> UsersFollowings { get; set; }
 		protected override void OnModelCreating(ModelBuilder builder)
 		{
 			base.OnModelCreating(builder);
@@ -32,6 +33,19 @@ namespace Persistence
 				.WithMany(c => c.Comments)
 				.OnDelete(DeleteBehavior.Cascade);
 			// this means that if we delete an activity, all related comments will also be deleted
+			builder.Entity<UserFollowing>
+				(x =>
+				{
+					x.HasKey(uf => new { uf.ObserverId, uf.TargetId });
+					x.HasOne(o => o.Observer)
+						.WithMany(f => f.Followings)
+						.HasForeignKey(o => o.ObserverId)
+						.OnDelete(DeleteBehavior.Cascade);
+					x.HasOne(t => t.Target)
+						.WithMany(f => f.Followers)
+						.HasForeignKey(t => t.TargetId)
+						.OnDelete(DeleteBehavior.Cascade);
+				});
 		}
 	}
 }

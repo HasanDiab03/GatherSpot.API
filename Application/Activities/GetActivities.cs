@@ -1,7 +1,7 @@
 ﻿using Application.Core;
+using Application.Repositories;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
@@ -13,19 +13,22 @@ namespace Application.Activities
 	{
 			private readonly DataContext _context;
 			private readonly IMapper _mapper;
+			private readonly IUserAccessor _userAccessor;
 
-			public GetActivitiesHandler(DataContext context, IMapper mapper)
+			public GetActivitiesHandler(DataContext context, IMapper mapper, IUserAccessor userAccessor)
 			{
 				_context = context;
 				_mapper = mapper;
+				_userAccessor = userAccessor;
 			}
 
 			public async Task<Result<List<ActivityDto>>> Handle(GetActivitiesQuery request, CancellationToken cancellationToken)
 			{
 				var activities = await _context.Activities
-					.ProjectTo<ActivityDto>(_mapper.ConfigurationProvider)
+					.ProjectTo<ActivityDto>(_mapper.ConfigurationProvider, 
+						new {currentUsername = _userAccessor.GetUsername()})
 					.ToListAsync(cancellationToken);
-				//	ProjectTo is equivelent to Include(), it just does it in a cleaner way.
+				//	ProjectTo is equivilent to Include(), it just does it in a cleaner way.
 				return Result<List<ActivityDto>>.Success(activities);
 			}
 			// The Cancellation Token is used for cancelling the request whenever a client no longer wants to keep waiting until it finishes,
