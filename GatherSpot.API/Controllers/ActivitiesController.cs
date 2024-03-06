@@ -1,4 +1,5 @@
 ﻿using Application.Activities;
+using Application.Core;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +10,10 @@ namespace GatherSpot.API.Controllers
 	{
 
 		[HttpGet]
-		public async Task<ActionResult<List<Activity>>> GetActivities(CancellationToken ct)
+		public async Task<ActionResult<List<Activity>>> GetActivities([FromQuery] ActivityParams pp,CancellationToken ct)
 		{
-			var result = await Mediator.Send(new GetActivitiesQuery(), ct);
-			return HandleResult(result);
+			var result = await Mediator.Send(new GetActivitiesQuery(pp), ct);
+			return HandlePagedResult(result);
 		}																	// send an instance of the GetActivitiesQuery,
 																		   // which will be handled by its own RequestHandler
 

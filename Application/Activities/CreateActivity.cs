@@ -1,12 +1,6 @@
 ﻿using Domain;
 using MediatR;
 using Persistence;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using Application.Core;
 using Application.Repositories;
 using FluentValidation;
