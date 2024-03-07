@@ -29,10 +29,33 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionMiddleware>();
 
+app.UseXContentTypeOptions(); // adds X-Content-Type-Options header to prevent Mime-sniffing of the content type, keep only the specified content type as the allowed one
+app.UseReferrerPolicy(options => options.NoReferrer()); // to control how much info the browser includes when navigating away from the app 
+app.UseXXssProtection(options => options.EnabledWithBlockMode()); // add the cross site scripting protection header
+app.UseXfo(options => options.Deny()); // prevents the app from being used in an Iframe to protect against click-jacking attacks
+app.UseCsp(options => options
+	.BlockAllMixedContent()
+	.StyleSources(s => s.Self().CustomSources("https://fonts.googleapis.com"))
+	.FontSources(s => s.Self().CustomSources("https://fonts.gstatic.com", "data:"))
+	.FormActions(s => s.Self())
+	.FrameAncestors(s => s.Self())
+	.ImageSources(s => s.Self().CustomSources("blob:").CustomSources("https://firebasestorage.googleapis.com"))
+	.ScriptSources(s => s.Self())); // this is the main defense against cross site scripting attacks, used to whitelist some sources of content 
+
+
 if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
+}
+else
+{
+	app.Use(async (context, next) =>
+	{
+		context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000");
+		// header that enforces the use of https
+		await next.Invoke();
+	});
 }
 
 app.UseCors("CorsPolicy");
@@ -40,9 +63,12 @@ app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseDefaultFiles();// this looks inside the wwwroot folder, and fishes out and serve any default named static files (index.html, index.css, index.js, etc...)
+app.UseStaticFiles();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/chat");
+app.MapFallbackToController("Index", "Fallback");
 
 using var scope = app.Services.CreateScope(); // create a scope to access a service,
                                               // something like what happens when a http request comes for example,
