@@ -15,11 +15,20 @@ namespace GatherSpot.API.Controllers
 	{
 		private readonly UserManager<AppUser> _userManager;
 		private readonly TokenService _tokenService;
+		private readonly IConfiguration _config;
+		private readonly HttpClient _httpClient;
 
-		public AccountController(UserManager<AppUser> userManager, TokenService tokenService)
+		public AccountController(UserManager<AppUser> userManager, TokenService tokenService, IConfiguration config)
 		{
 			_userManager = userManager;
-			_tokenService = tokenService; 
+			_tokenService = tokenService;
+			_config = config;
+			_httpClient = new HttpClient()
+			{
+				BaseAddress = new System.Uri("https://graph.facebook.com")
+				// this will be used to verify that the access token sent to us by the user is valid for our facebook app, 
+				// also it can be used to get the user details
+			};
 		}
 		[HttpPost("login")]
 		[AllowAnonymous] // this is so that the AccountController endpoints don't require authentication
@@ -73,6 +82,41 @@ namespace GatherSpot.API.Controllers
 				.FirstOrDefaultAsync(x => x.Email == User.FindFirstValue(ClaimTypes.Email));
 			// the User here is a Claims Principal associated to the action execution,
 			// since we are using JWT to authenticate, then the claims principal will be inside the token
+			return CreateUserDto(user);
+		}
+
+		[AllowAnonymous]
+		[HttpPost("fbLogin")]
+		public async Task<ActionResult<UserDto>> FacebookLogin(string accessToken)
+		{
+			var fbVerifyKeys = _config["Facebook:AppId"] + "|" + _config["Facebook:AppSecret"];
+			var verifyTokenResponse =
+				await _httpClient.GetAsync($"debug_token?input_token={accessToken}&access_token={fbVerifyKeys}");
+			if (!verifyTokenResponse.IsSuccessStatusCode)
+				return Unauthorized();
+			var fbUrl = $"me?access_token={accessToken}&fields=name,email,picture.width(100).height(100)";
+			var fbInfo = await _httpClient.GetFromJsonAsync<FacebookDto>(fbUrl);
+			var user = await _userManager.Users.Include(x => x.Photos).FirstOrDefaultAsync(x => x.Email == fbInfo.Email);
+			if (user is not null)
+				return CreateUserDto(user);
+			user = new AppUser()
+			{
+				DisplayName = fbInfo.Name,
+				Email = fbInfo.Email,
+				UserName = fbInfo.Email,
+				Photos = new List<Photo>()
+				{
+					new Photo()
+					{
+						Id = Guid.Parse("fb_" + fbInfo.Id),
+						Url = fbInfo.Picture.Data.Url,
+						IsMain = true
+					}
+				}
+			};
+			var result = await _userManager.CreateAsync(user);
+			if (!result.Succeeded)
+				return BadRequest("Problem Creating User Account");
 			return CreateUserDto(user);
 		}
 		private UserDto CreateUserDto(AppUser user)

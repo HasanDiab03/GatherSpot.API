@@ -20,7 +20,7 @@ namespace GatherSpot.API.Extensions
 			services.AddSwaggerGen();
 			services.AddDbContext<DataContext>(options =>
 			{
-				options.UseNpgsql(config.GetConnectionString("DefaultConnection"));
+				options.UseSqlite(config.GetConnectionString("SQLiteConnection"));
 			});
 			services.AddCors(options =>
 			{
@@ -30,7 +30,7 @@ namespace GatherSpot.API.Extensions
 						.AllowAnyMethod()
 						.AllowAnyHeader()
 						.AllowCredentials() // this is for signalR specificly, since it requires Access-Control-Allow-Credentials header to be sent
-						.WithOrigins("http://localhost:5173");
+						.WithOrigins("http://localhost:5173", "https://localhost:5173");
 				});
 			});
 
