@@ -1,10 +1,13 @@
 ﻿using System.Security.Claims;
+using System.Text;
 using Domain;
 using GatherSpot.API.DTOs;
 using GatherSpot.API.Services;
+using Infrastructure.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GatherSpot.API.Controllers
@@ -14,18 +17,23 @@ namespace GatherSpot.API.Controllers
 	public class AccountController : ControllerBase
 	{
 		private readonly UserManager<AppUser> _userManager;
+		private readonly SignInManager<AppUser> _signInManager;
 		private readonly TokenService _tokenService;
 		private readonly IConfiguration _config;
+		private readonly EmailSender _emailSender;
 		private readonly HttpClient _httpClient;
 
-		public AccountController(UserManager<AppUser> userManager, TokenService tokenService, IConfiguration config)
+		public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
+			TokenService tokenService, IConfiguration config, EmailSender emailSender)
 		{
 			_userManager = userManager;
+			_signInManager = signInManager;
 			_tokenService = tokenService;
 			_config = config;
+			_emailSender = emailSender;
 			_httpClient = new HttpClient()
 			{
-				BaseAddress = new System.Uri("https://graph.facebook.com")
+				BaseAddress = new Uri("https://graph.facebook.com")
 				// this will be used to verify that the access token sent to us by the user is valid for our facebook app, 
 				// also it can be used to get the user details
 			};
@@ -37,9 +45,11 @@ namespace GatherSpot.API.Controllers
 			var user = await _userManager.Users
 				.Include(p => p.Photos)
 				.FirstOrDefaultAsync(x => x.Email == loginDto.Email);
-			if (user is null) return Unauthorized();
-			var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
-			if(!result) return Unauthorized();
+			if (user is null) return Unauthorized("Invalid Email");
+			if (!user.EmailConfirmed)
+				return Unauthorized("Email Not Confirmed");
+			var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+			if(!result.Succeeded) return Unauthorized("Invalid Password");
 			await SetRefreshToken(user);
 			return CreateUserDto(user);
 		}
@@ -70,8 +80,44 @@ namespace GatherSpot.API.Controllers
 			var result = await _userManager.CreateAsync(user, registerDto.Password);
 			if (!result.Succeeded)
 				return BadRequest(result.Errors);
-			await SetRefreshToken(user);
-			return CreateUserDto(user);
+			var origin = Request.Headers["origin"];
+			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+			token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token)); // since the token will be sent in an html in the email, it needs to be encoded so that it doesn't get corrupted
+			var verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
+			var message = $"<p>Please Click the Below Link to Verify Your Email Address: </p><p><a href='{verifyUrl}'>Click To Verify Email</a></p>";
+			await _emailSender.SendEmailAsync(user.Email, "Please Verify Email", message);
+			return Ok("Registration Success - Please Verify Email");
+		}
+
+		[AllowAnonymous]
+		[HttpPost("verifyEmail")]
+		public async Task<IActionResult> VerifyEmail(string token, string email)
+		{
+			var user = await _userManager.FindByEmailAsync(email);
+			if (user is null)
+				return Unauthorized();
+			var decodedTokenBytes = WebEncoders.Base64UrlDecode(token);
+			var decodedToken = Encoding.UTF8.GetString(decodedTokenBytes);
+			var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+			if (!result.Succeeded)
+				return BadRequest("Could not Verify Email Address");
+			return Ok("Email confirmed - you can now login");
+		}
+
+		[AllowAnonymous]
+		[HttpGet("resendEmailConfirmationLink")]
+		public async Task<IActionResult> ResendEmailConfirmationLink(string email) 
+		{
+			var user = await _userManager.FindByEmailAsync(email);
+			if (user is null)
+				return Unauthorized();
+			var origin = Request.Headers["origin"];
+			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+			token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token)); // since the token will be sent in an html in the email, it needs to be encoded so that it doesn't get corrupted
+			var verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
+			var message = $"<p>Please Click the Below Link to Verify Your Email Address: </p><p><a href='{verifyUrl}'>Click To Verify Email</a></p>";
+			await _emailSender.SendEmailAsync(user.Email, "Please Verify Email", message);
+			return Ok("Email Verification Link Resent");
 		}
 
 		[HttpGet]

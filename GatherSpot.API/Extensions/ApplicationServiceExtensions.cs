@@ -8,6 +8,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.Photos;
 using Infrastructure.Security;
+using Infrastructure.Email;
 
 namespace GatherSpot.API.Extensions
 {
@@ -41,6 +42,7 @@ namespace GatherSpot.API.Extensions
 			services.AddHttpContextAccessor();
 			services.AddScoped<IUserAccessor, UserAccessor>();
 			services.AddScoped<IPhotoAccessor, PhotoAccessor>();
+			services.AddScoped<EmailSender>();
 			services.AddSignalR();
 			return services;
 		}

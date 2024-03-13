@@ -4,6 +4,7 @@ using GatherSpot.API.Services;
 using Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Persistence;
 
@@ -16,9 +17,11 @@ namespace GatherSpot.API.Extensions
 			services.AddIdentityCore<AppUser>(options =>
 			{
 				options.Password.RequireNonAlphanumeric = false; // we can add options to a couple of attributes here such as the password
-				options.User.RequireUniqueEmail = true;
+				options.SignIn.RequireConfirmedEmail = true;
 			})
-			.AddEntityFrameworkStores<DataContext>(); // this is used to allow to connect and query the identity tables in our db
+			.AddEntityFrameworkStores<DataContext>() // this is used to allow to connect and query the identity tables in our db
+			.AddSignInManager<SignInManager<AppUser>>()
+			.AddDefaultTokenProviders(); // this will provide the methods to generate tokens, which will be used to generate the email confirmation token
 			var key = new SymmetricSecurityKey(
 				Encoding.UTF8.GetBytes(configuration["TokenKey"]));
 			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
