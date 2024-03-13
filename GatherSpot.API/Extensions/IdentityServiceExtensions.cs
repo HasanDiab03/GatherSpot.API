@@ -29,7 +29,9 @@ namespace GatherSpot.API.Extensions
 						ValidateIssuerSigningKey = true,
 						IssuerSigningKey = key,
 						ValidateIssuer = false,
-						ValidateAudience = false
+						ValidateAudience = false,
+						ValidateLifetime = true,
+						ClockSkew = TimeSpan.Zero // this is because be default, there will always be a 5 minute window that the token is still valid in, so we remove it
 					};
 					options.Events = new JwtBearerEvents()
 					{

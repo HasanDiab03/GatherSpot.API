@@ -40,6 +40,7 @@ namespace GatherSpot.API.Controllers
 			if (user is null) return Unauthorized();
 			var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
 			if(!result) return Unauthorized();
+			await SetRefreshToken(user);
 			return CreateUserDto(user);
 		}
 
@@ -69,7 +70,7 @@ namespace GatherSpot.API.Controllers
 			var result = await _userManager.CreateAsync(user, registerDto.Password);
 			if (!result.Succeeded)
 				return BadRequest(result.Errors);
-
+			await SetRefreshToken(user);
 			return CreateUserDto(user);
 		}
 
@@ -117,7 +118,38 @@ namespace GatherSpot.API.Controllers
 			var result = await _userManager.CreateAsync(user);
 			if (!result.Succeeded)
 				return BadRequest("Problem Creating User Account");
+			await SetRefreshToken(user);
 			return CreateUserDto(user);
+		}
+
+		[Authorize]
+		[HttpPost("refreshToken")]
+		public async Task<ActionResult<UserDto>> RefreshToken()
+		{
+			var refreshToken = Request.Cookies["refreshToken"];
+			var user = await _userManager.Users
+				.Include(r => r.RefreshTokens)
+				.Include(p => p.Photos)
+				.FirstOrDefaultAsync(x => x.UserName == User.FindFirstValue(ClaimTypes.Name));
+			if(user is null)
+				return Unauthorized();
+			var oldToken = user.RefreshTokens.SingleOrDefault(x => x.Token == refreshToken);
+			if (oldToken is not null && !oldToken.IsActive)
+				return Unauthorized();
+			return CreateUserDto(user);
+		}
+
+		private async Task SetRefreshToken(AppUser user)
+		{
+			var refreshToken = _tokenService.GenerateRefreshToken();
+			user.RefreshTokens.Add(refreshToken);
+			await _userManager.UpdateAsync(user);
+			var cookieOptions = new CookieOptions
+			{
+				HttpOnly = true,
+				Expires = DateTime.UtcNow.AddDays(7),
+			};
+			Response.Cookies.Append("refreshToken", refreshToken.Token, cookieOptions);
 		}
 		private UserDto CreateUserDto(AppUser user)
 			=> new()

@@ -39,8 +39,9 @@ app.UseCsp(options => options
 	.FontSources(s => s.Self().CustomSources("https://fonts.gstatic.com", "data:"))
 	.FormActions(s => s.Self())
 	.FrameAncestors(s => s.Self())
-	.ImageSources(s => s.Self().CustomSources("blob:").CustomSources("https://firebasestorage.googleapis.com"))
-	.ScriptSources(s => s.Self())); // this is the main defense against cross site scripting attacks, used to whitelist some sources of content 
+	.ImageSources(s => s.Self().CustomSources("blob:", "https://firebasestorage.googleapis.com", "data:", 
+	"https://platform-lookaside.fbsbx.com"))
+	.ScriptSources(s => s.Self().CustomSources("https://connect.facebook.net"))); // this is the main defense against cross site scripting attacks, used to whitelist some sources of content 
 
 
 if (app.Environment.IsDevelopment())
@@ -65,7 +66,6 @@ app.UseAuthorization();
 
 app.UseDefaultFiles();// this looks inside the wwwroot folder, and fishes out and serve any default named static files (index.html, index.css, index.js, etc...)
 app.UseStaticFiles();
-
 app.MapControllers();
 app.MapHub<ChatHub>("/chat");
 app.MapFallbackToController("Index", "Fallback");
